@@ -42,6 +42,9 @@
 ## 
 ## 
 ## put everything in one file except the lovelace stuff. store it in packages and name it as you like. It has to end with .yaml
+## store the files in the config/www folder and you're ready to use it.
+## 
+## --> change the zones if needed and the times for the filter changes! 
 ## 
 ## 
 
