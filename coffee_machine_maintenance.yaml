@@ -1,0 +1,250 @@
+##########################################################################################
+##
+##  Stoellchen's stuff for coffee machine ...
+##
+##########################################################################################
+##
+##
+##
+##  Sample for Lovelace image entity
+##  ################################
+##
+## elements:
+##   - entity: automation.coffee_machine_weekly_set_date
+##     state_image:
+##       'off': /local/coffee_service_weekly_machine.png
+##       'on': /local/coffee_service_weekly_machine.png
+##     style:
+##       left: 85%
+##       top: 50%
+##       width: 25%
+##     tap_action:
+##       action: automation.coffee_machine_weekly_set_date
+##     type: image
+##   - entity: input_datetime.coffee_machine_weekly_cleaned
+##     style:
+##       bottom: 52%
+##       color: black
+##       font-size: 26px
+##       left: 4.5%
+##       transform: initial
+##     type: state-label
+##   - entity: sensor.coffee_machine_weekly_cleaning_remaining
+##     style:
+##       bottom: 6%
+##       color: black
+##       font-size: 26px
+##       left: 4.5%
+##       transform: initial
+##     type: state-label
+## image: /local/coffee_service_general_last_action.png
+## type: picture-elements
+## 
+## 
+## put everything in one file except the lovelace stuff. store it in packages and name it as you like. It has to end with .yaml
+## 
+## 
+
+input_datetime:
+  coffee_filter_brita_bottle_installed:
+    name: Brita Filter Bottle changed
+    has_date: true
+    has_time: true
+  coffee_filter_brita_machine_installed:
+    name: Brita Filter Machine changed
+    has_date: true
+    has_time: true
+  coffee_machine_weekly_cleaned:
+    name: Coffee Machine Weeky cleaned
+    has_date: true
+    has_time: true
+
+### Required Sensors ###
+sensor:
+- platform: time_date
+  display_options:
+      - 'time'
+      - 'date'
+      - 'date_time'
+      - 'date_time_utc'
+      - 'date_time_iso'
+      - 'time_date'
+      - 'time_utc'
+#      - 'beat'
+      
+- platform: template
+  sensors:
+    coffee_filter_brita_bottle_life_remaining:
+        value_template: >
+          {{(((as_timestamp(states.input_datetime.coffee_filter_brita_bottle_installed.state) + (30 * 86400) ) - as_timestamp(states.sensor.date.state)) /86400)|round(0)}} days
+
+- platform: template
+  sensors:
+    coffee_filter_brita_machine_life_remaining:
+        value_template: >
+          {{(((as_timestamp(states.input_datetime.coffee_filter_brita_machine_installed.state) + (90 * 86400) ) - as_timestamp(states.sensor.date.state)) /86400)|round(0)}} days
+
+- platform: template
+  sensors:
+    coffee_machine_weekly_cleaning_remaining:
+        value_template: >
+          {{(((as_timestamp(states.input_datetime.coffee_machine_weekly_cleaned.state) + (7 * 86400) ) - as_timestamp(states.sensor.date.state)) /86400)|round(0)}} days
+
+automation:
+- alias: brita_bottle_set_date
+  description: 'Brita Bottle - Set Date'
+  trigger:
+  - event_data:
+      actionName: CONFIRM_BRITA_BOTTLE
+    event_type: ios.notification_action_fired
+    platform: event
+  condition: []
+  action:
+  - data_template:
+      datetime: '{{ as_timestamp(now())|timestamp_custom(''%Y-%m-%d %H:%M'') }}'
+    entity_id: input_datetime.coffee_filter_brita_bottle_installed
+    service: input_datetime.set_datetime
+
+- alias: coffee_filter_brita_bottle_reminder
+  description: 'Coffee filter brita Bottle reminder'
+  trigger:
+  - entity_id: person.thomas
+    event: enter
+    platform: zone
+    zone: zone.home
+  - at: '17:30:00'
+    platform: time
+  condition:
+  - below: '2'
+    condition: numeric_state
+    entity_id: input_datetime.coffee_filter_brita_bottle_installed
+    value_template: '{{(((as_timestamp(states.input_datetime.coffee_filter_brita_bottle_installed.state)
+      + (30 * 86400) ) - as_timestamp(states.sensor.date.state)) /86400)|round(0)}}'
+  - condition: zone
+    entity_id: person.thomas
+    zone: zone.home
+  action:
+  - data:
+      message: Brita Bottle filter needs to be replaced
+    service: notify.ALL_MOBILE_DEVICES_HIGH_PRIO
+  - data:
+      data:
+        push:
+          category: coffeebritabottleconfirm
+      message: Brita Bottle filter needs to be replaced
+      title: Coffee Machine !!
+    service: notify.ALL_MOBILE_DEVICES_HIGH_PRIO
+
+
+- alias: brita_machine_set_date
+  description: 'Brita Machine - Set Date'
+  trigger:
+  - event_data:
+      actionName: CONFIRM_BRITA_MACHINE
+    event_type: ios.notification_action_fired
+    platform: event
+  condition: []
+  action:
+  - data_template:
+      datetime: '{{ as_timestamp(now())|timestamp_custom(''%Y-%m-%d %H:%M'') }}'
+    entity_id: input_datetime.coffee_filter_brita_machine_installed
+    service: input_datetime.set_datetime
+
+- alias: coffee_filter_brita_machine_reminder
+  description: 'Coffee filter brita Machine reminder'
+  trigger:
+  - entity_id: person.thomas
+    event: enter
+    platform: zone
+    zone: zone.home
+  - at: '17:30:00'
+    platform: time
+  condition:
+  - below: '2'
+    condition: numeric_state
+    entity_id: input_datetime.coffee_filter_brita_machine_installed
+    value_template: '{{(((as_timestamp(states.input_datetime.coffee_filter_brita_machine_installed.state)
+      + (30 * 86400) ) - as_timestamp(states.sensor.date.state)) /86400)|round(0)}}'
+  - condition: zone
+    entity_id: person.thomas
+    zone: zone.home
+  action:
+  - data:
+      data:
+        push:
+          category: coffeebritamachineconfirm
+      message: Brita Machine filter needs to be replaced
+      title: Coffee Machine !!
+    service: notify.ALL_MOBILE_DEVICES_HIGH_PRIO
+
+
+- alias: coffee_machine_weekly_set_date
+  description: 'Coffee Machine weekly - Set Date'
+  trigger:
+  - event_data:
+      actionName: CONFIRM_COFFEE_MACHINE_WEEKLY
+    event_type: ios.notification_action_fired
+    platform: event
+  condition: []
+  action:
+  - data_template:
+      datetime: '{{ as_timestamp(now())|timestamp_custom(''%Y-%m-%d %H:%M'') }}'
+    entity_id: input_datetime.coffee_machine_weekly_cleaned
+    service: input_datetime.set_datetime
+
+- alias: coffee_machine_weekly_reminder
+  description: 'Coffee Machine weekly reminder'
+  trigger:
+  - entity_id: person.thomas
+    event: enter
+    platform: zone
+    zone: zone.home
+  - at: '17:30:00'
+    platform: time
+  condition:
+  - below: '2'
+    condition: numeric_state
+    entity_id: input_datetime.coffee_machine_weekly_cleaned
+    value_template: '{{(((as_timestamp(states.input_datetime.coffee_machine_weekly_cleaned.state)
+      + (30 * 86400) ) - as_timestamp(states.sensor.date.state)) /86400)|round(0)}}'
+  - condition: zone
+    entity_id: person.thomas
+    zone: zone.home
+  action:
+  - data:
+      data:
+        push:
+          category: coffeemachineweeklyconfirm
+      message: Coffee Machine needs to be cleaned
+      title: Coffee Machine !!
+    service: notify.ALL_MOBILE_DEVICES_HIGH_PRIO
+
+
+###For Actionable Push Notification###
+ios:
+  push:
+    categories:
+      - name: Coffee Brita Bottle Confirm
+        identifier: 'coffeebritabottleconfirm'
+        actions:
+          - identifier: 'CONFIRM_BRITA_BOTTLE'
+            title: 'I changed the bottle filter.'
+          - identifier: 'CANCEL_BRITA_BOTTLE'
+            title: 'I did not change the bottle filter.'
+
+      - name: Coffee Brita Machine Confirm
+        identifier: 'coffeebritamachineconfirm'
+        actions:
+          - identifier: 'CONFIRM_BRITA_MACHINE'
+            title: 'I changed the watertank filter.'
+          - identifier: 'CANCEL_BRITA_MACHINE'
+            title: 'I did not change the watertank filter.'
+
+      - name: Coffee Machine Weekly Confirm
+        identifier: 'coffeemachineweeklyconfirm'
+        actions:
+          - identifier: 'CONFIRM_COFFEE_MACHINE_WEEKLY'
+            title: 'I cleaned the machine.'
+          - identifier: 'CANCEL_COFFEE_MACHINE_WEEKLY'
+            title: 'I did not clean the machine.'
+
