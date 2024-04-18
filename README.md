@@ -6,3 +6,6 @@ This is intend to have different reminders running for my coffee machine. Feel f
 
 read the yaml. You'll find everything you should know.
 
+
+
+[Sample Image how it look at the end] (coffee_brita_machine_filter.png)
