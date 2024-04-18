@@ -8,4 +8,4 @@ read the yaml. You'll find everything you need to know.
 
 
 
-[Sample Image how it look at the end] (sample_HA-Coffee-maintenance.png)
+![Sample Image how it look at the end](sample_HA-Coffee-maintenance.png)
